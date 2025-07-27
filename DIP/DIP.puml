@@ -1,0 +1,49 @@
+@startuml DIP
+left to right direction
+allowmixing
+skinparam packageStyle rectangle
+
+package "Messenger" {
+    interface IMessenger {
+        + send(message: String): void
+    }
+
+    class MessageSenderFactory {
+        + createMessenger(type: String): IMessenger
+        + registerMessenger(type: String, sender: IMessenger): void
+    }
+
+    class EmailSender implements IMessenger {
+        + send(message: String): void
+    }
+
+    class SMSSender implements IMessenger {
+        + send(message: String): void
+    }
+
+    MessageSenderFactory --> IMessenger : create
+    MessageSenderFactory --> EmailSender
+    MessageSenderFactory --> SMSSender
+
+}
+
+package "Application" {
+    class NotificationSender {
+        + sendNotification(message: String): void
+        - sender: IMessenger
+    }
+
+    NotificationSender *-- IMessenger
+}
+
+actor main
+main --> MessageSenderFactory : createSender("email" | "sms")
+main --> Application.NotificationSender : inject(IMessenger)
+
+note top of main
+  main is the composition root:
+  - selects sender type
+  - calls factory
+  - injects sender into NotificationSender
+end note
+@enduml
